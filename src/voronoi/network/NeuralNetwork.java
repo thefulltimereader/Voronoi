@@ -2,56 +2,91 @@ package voronoi.network;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import voronoi.util.CalcUtil;
 
 public class NeuralNetwork {
   private final int SIZE = 64;
   private final int WIDTH = 8;
   // first input neurons
   private double[] input;
-
-  /**
-   * 1st hidden spacial layer of 4 neurons has 16 neurons per neuron
-   */
-  private double[] firstCoordWeights;
+  private int id;
+  
+  
   /**
    * to keep track of indecies of 16 neurons 2D array 
    */
   private List<List<Integer>> firstLayer;
   private List<List<Integer>> secondLayer;
   private List<List<Integer>> thirdLayer;
+  
+  /**
+   * 1st hidden spacial layer of 4 neurons has 16 neurons per neuron
+   */
+  private double[] firstCoordWeights;
   /**
    * 2nd hidden spacial layer has 4 neurons per neuron
    */
   private double[] secondCoordWeights;
   private double[] thirdCoordWeights;
+  /**
+   * Self-adaptive parameter per NN (strategy)
+   * initially set to 0.05
+   */
+  private double[] selfAdaptiveParam;
+  private double[] selfAdaptiveParamTwo;
+  private double[] selfAdaptiveParamThree;
+  
+  private final double tau;
+    
+  private final Random randGen;
+  private final int numWeights;
 
   public NeuralNetwork() {
     input = new double[SIZE];
     // 4 becuase of the 4 coordinate
     firstCoordWeights = new double[4];
+    selfAdaptiveParam = new double[4];
     firstLayer = new ArrayList<List<Integer>>();
     secondCoordWeights = new double[4];
     secondLayer = new ArrayList<List<Integer>>();
     thirdCoordWeights = new double[4];
     thirdLayer = new ArrayList<List<Integer>>();
+    randGen = new Random();
+    //for mutation
+    numWeights = 4*4*4; //64
+    tau = 1/Math.sqrt(2*Math.sqrt(numWeights));
     initialize();
   }
-
+  /**
+   * Weights are generated sampling from a uniform distribution over [-0.2, 0.2]
+   * with X initially set to 2.0
+   */
   void initialize() {
     for (int i = 0, n = firstCoordWeights.length; i < n; i++) {
-      firstCoordWeights[i] = 0.5;
+      firstCoordWeights[i] = (randGen.nextDouble()*.4)-0.2;
     }
     for(int i=0; i<4;i++){
       firstLayer.add(new ArrayList<Integer>());
     }
     for (int i = 0, n = secondCoordWeights.length; i < n; i++) {
-      secondCoordWeights[i] = 0.8;
+      secondCoordWeights[i] = (randGen.nextDouble()*.4)-0.2;
     }
     for(int i=0; i<4;i++){
       secondLayer.add(new ArrayList<Integer>());
     }
+    for (int i = 0, n = thirdCoordWeights.length; i < n; i++) {
+      thirdCoordWeights[i] = (randGen.nextDouble()*.4)-0.2;
+    }
     for(int i=0; i<4;i++){
       thirdLayer.add(new ArrayList<Integer>());
+    }
+    //initially set for 0.05
+    for(int i=0, n=selfAdaptiveParam.length; i<n;i++){
+      selfAdaptiveParam[i] = 0.05;
+      selfAdaptiveParamTwo[i] = 0.05;
+      selfAdaptiveParamThree[i] = 0.05;
     }
     
 
@@ -81,7 +116,7 @@ public class NeuralNetwork {
       List<Integer> sixteens = secondLayer.get(i);
       for(Integer ind : sixteens){
         int position = getCoordinate(ind%4, 2);
-        input[ind] = input[ind]*thirdCoordWeights[position-1];
+        input[ind] = CalcUtil.sigmoid(input[ind]*thirdCoordWeights[position-1]);
         thirdLayer.get(position-1).add(ind);
       }
     }
@@ -101,7 +136,7 @@ public class NeuralNetwork {
       List<Integer> sixteens = firstLayer.get(i);
       for(Integer ind : sixteens){
         int position = getCoordinate(ind%16, 4);
-        input[ind] = input[ind]*secondCoordWeights[position-1];
+        input[ind] = CalcUtil.sigmoid(input[ind]*secondCoordWeights[position-1]);
         secondLayer.get(position-1).add(ind);
       }
     }
@@ -120,7 +155,7 @@ public class NeuralNetwork {
     for (int i = 0; i < SIZE; i++) {
       int position = getCoordinate(i, WIDTH);
       //apply appropriate weight
-      input[i] = input[i]*firstCoordWeights[position-1];
+      input[i] = CalcUtil.sigmoid(input[i]*firstCoordWeights[position-1]);
       //update index
       firstLayer.get(position-1).add(i);        
     }
@@ -183,4 +218,55 @@ public class NeuralNetwork {
     }
 
   }
+
+  public int getId() {
+    return id;
+  }
+  
+  public void setId(int id){
+    this.id = id;
+  }
+
+  /**
+   * Each parent produces offspring, P'_i using: sigma'_i =
+   * sigma_i(j)*exp(tau*normpdf(j, 0,1)) w'_i(j) = w_i(j) +
+   * sigma'_i(j)*normpd(j, 0,1) j = 1,..., N_w Where: N_w = number of weights in
+   * this NN tau = 1/sqrt(2*sqrt(N_w)) - computed in constructor N_j(0,1) is a
+   * standard Gaussian random variable resampled for every NN=j
+   * 
+   * Here P_i is just this NN so forget about the indicies
+   * 
+   * @return Offspring of this NN
+   */
+  public NeuralNetwork generateOffspring() {
+    double term = tau*CalcUtil.randomGaussian(0, 1);
+    double[] childAdaptiveParamOne = new double[4];
+    double[] childAdaptiveParamTwo = new double[4];
+    double[] childAdaptiveParamThree = new double[4];
+    for(int i=0, n=selfAdaptiveParam.length; i<n; i++){
+      childAdaptiveParamOne[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
+      childAdaptiveParamTwo[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
+      childAdaptiveParamThree[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
+    }
+    double[] firstWeights = new double[4];
+    for(int i=0, n=firstCoordWeights.length; i<n; i++){
+      firstWeights[i] = firstCoordWeights[i] +
+      childAdaptiveParamOne[i]*CalcUtil.randomGaussian(0, 1);
+    }
+    double[] secondWeights = new double[4];
+    for(int i=0, n=secondCoordWeights.length; i<n; i++){
+      secondWeights[i] = secondCoordWeights[i] +
+      childAdaptiveParamTwo[i]*CalcUtil.randomGaussian(0, 1);
+    }
+    double[] thirdWeights = new double[4];
+    for(int i=0, n=thirdCoordWeights.length; i<n; i++){
+      thirdWeights[i] = thirdCoordWeights[i] +
+      childAdaptiveParamThree[i]*CalcUtil.randomGaussian(0, 1);
+    }
+    
+    
+    return null;
+  }
+  
+
 }
