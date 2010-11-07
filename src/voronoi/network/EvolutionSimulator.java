@@ -1,5 +1,6 @@
 package voronoi.network;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,8 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import voronoi.gameState.GameSimulator;
+import voronoi.util.EvolutionLogger;
 
 /**
  * 1. Randomly create 15 (or some constant) artificial neural networks, P_i
@@ -34,8 +38,11 @@ import voronoi.gameState.GameSimulator;
  * 
  */
 public class EvolutionSimulator {
+  private final static Logger LOGGER = 
+    Logger.getLogger(EvolutionSimulator.class.getName());
   final static int startingIndividuals = 15;
   private final Random randGen = new Random();
+  int totalNumOfIndividuals = 0;
   int generations = 0;
   /**
    * Data structure to save each nn associating them with their score
@@ -44,11 +51,19 @@ public class EvolutionSimulator {
 
   public static void main(String[] args) {
     EvolutionSimulator world = new EvolutionSimulator();
+    
     world.start();
   }
 
   public EvolutionSimulator() {
     individuals = new HashMap<NeuralNetwork, Integer>();
+    LOGGER.setLevel(Level.FINEST);
+    try {
+      EvolutionLogger.setup();
+    } catch (IOException e) {
+      System.err.println("bad setup");
+      e.printStackTrace();
+    }
   }
 
   public void start() {
@@ -65,25 +80,34 @@ public class EvolutionSimulator {
     // 1. randomly produce 15 individuals
     for (int i = 0; i < startingIndividuals; i++) {
       NeuralNetwork n = new NeuralNetwork();
+      n.setName(totalNumOfIndividuals);
+      totalNumOfIndividuals++;
       individuals.put(n, 0);
     }
   }
 
   void mutate() {
+    //System.out.println("Mutate");
     Map<NeuralNetwork, Integer> copy = new HashMap<NeuralNetwork, Integer>(
         individuals);
     Set<NeuralNetwork> parents = copy.keySet();
     for (NeuralNetwork parent : parents) {
       NeuralNetwork baby = parent.generateOffspring();
+      baby.setName(totalNumOfIndividuals);
+      totalNumOfIndividuals++;
       individuals.put(baby, 0);
     }
   }
 
   void playGame() {
+    int numOfGamesPlayed = 0;
     List<NeuralNetwork> everyone = new ArrayList<NeuralNetwork>(
         individuals.keySet());
     for (NeuralNetwork player : everyone) {
       // play 5 games
+      if(numOfGamesPlayed%10==0){
+        LOGGER.fine("# of Games played so far " + numOfGamesPlayed);
+      }
       for (int i = 0; i < 5; i++) {
         int rand = randGen.nextInt(everyone.size());
         if (!everyone.get(rand).equals(player)) {
@@ -93,10 +117,21 @@ public class EvolutionSimulator {
           int score = individuals.get(player);
           // update
           individuals.put(player, score + result);
+          numOfGamesPlayed++;
         }
       }
     }
     System.out.println("generation " + generations + " done");
+    logIndividualScore();
+    LOGGER.fine("********generation " + generations + " done********");
+  }
+
+  private void logIndividualScore() {
+    Set<NeuralNetwork> ind = individuals.keySet();
+    for(NeuralNetwork nn : ind){
+      LOGGER.info("Nn #"+nn.getName() + "'s score so far:" + individuals.get(nn));
+    }
+    
   }
 
   private void survivalOftheFittest() {
@@ -109,6 +144,8 @@ public class EvolutionSimulator {
     for(NeuralNetwork nn: sorted){
       newIndividuals.put(nn, individuals.get(nn));
     }
+    LOGGER.severe("Best so far is NN #" + sorted.get(0).getName()+
+        " with weights:"+sorted.get(0).recordDetails());
     individuals = newIndividuals;
   }
 

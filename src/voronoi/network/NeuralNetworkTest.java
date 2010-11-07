@@ -31,4 +31,8 @@ public class NeuralNetworkTest {
     nn.secondLayer();
     nn.thirdLayer();
   }
+  @Test
+  public void testRecordDetails(){
+    nn.recordDetails();
+  }
 }

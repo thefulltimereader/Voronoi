@@ -12,8 +12,9 @@ public class NeuralNetwork {
   // first input neurons
   private double[] input;
   private int id;
+  private int name;
   
-  
+  private boolean DEBUG = false;
   /**
    * to keep track of indecies of 16 neurons 2D array 
    */
@@ -34,29 +35,32 @@ public class NeuralNetwork {
    * Self-adaptive parameter per NN (strategy)
    * initially set to 0.05
    */
-  private double[] selfAdaptiveParam;
+  private double[] selfAdaptiveParamOne;
   private double[] selfAdaptiveParamTwo;
   private double[] selfAdaptiveParamThree;
-  
-  private final double tau;
+  /**
+   * Evolveable parameter for mutation
+   * Once in a while NN will return this value to the board instead of the usu
+   * {-1, 0 1} so there will be {-1, 0, 1, -X, X}
+   */
+  private double evolvable = 2;
     
-  private final Random randGen;
-  private final int numWeights;
+  private final Random randGen = new Random();
+  private final int numWeights = 64;
+  private final double tau = 1/Math.sqrt(2*Math.sqrt(numWeights));  
 
   public NeuralNetwork() {
     input = new double[SIZE];
     // 4 becuase of the 4 coordinate
     firstCoordWeights = new double[4];
-    selfAdaptiveParam = new double[4];
+    selfAdaptiveParamOne = new double[4];
     firstLayer = new ArrayList<List<Integer>>();
     secondCoordWeights = new double[4];
+    selfAdaptiveParamTwo = new double[4];
     secondLayer = new ArrayList<List<Integer>>();
     thirdCoordWeights = new double[4];
+    selfAdaptiveParamThree = new double[4];
     thirdLayer = new ArrayList<List<Integer>>();
-    randGen = new Random();
-    //for mutation
-    numWeights = 4*4*4; //64
-    tau = 1/Math.sqrt(2*Math.sqrt(numWeights));
     initialize();
   }
   /**
@@ -83,8 +87,8 @@ public class NeuralNetwork {
       thirdLayer.add(new ArrayList<Integer>());
     }
     //initially set for 0.05
-    for(int i=0, n=selfAdaptiveParam.length; i<n;i++){
-      selfAdaptiveParam[i] = 0.05;
+    for(int i=0, n=selfAdaptiveParamOne.length; i<n;i++){
+      selfAdaptiveParamOne[i] = 0.05;
       selfAdaptiveParamTwo[i] = 0.05;
       selfAdaptiveParamThree[i] = 0.05;
     }
@@ -99,6 +103,7 @@ public class NeuralNetwork {
    * @return
    */
   public double evaluateState(double[][] board) {
+    clearLayers();
     buildInput(board); //8x8->64*1
     firstLayer();//64->16
     secondLayer();//16-4
@@ -109,7 +114,18 @@ public class NeuralNetwork {
     }
     return result;
   }
-
+  //index layer array must be cleared
+  private void clearLayers() {
+    for(int i=0; i<4;i++){
+      firstLayer.get(i).clear();
+    }
+    for(int i=0; i<4;i++){
+      secondLayer.get(i).clear();
+    }
+    for(int i=0; i<4;i++){
+      thirdLayer.get(i).clear();
+    }
+  }
   void thirdLayer() {
     //for each clustered coordinate 0=QUAD1, 1=QUAD2, ..
     for(int i=0; i< SIZE/16; i++){
@@ -120,6 +136,7 @@ public class NeuralNetwork {
         thirdLayer.get(position-1).add(ind);
       }
     }
+    if(DEBUG){
     System.out.println();
     for(int i=0; i<thirdLayer.size(); i++){
       List<Integer> l = thirdLayer.get(i);
@@ -127,6 +144,7 @@ public class NeuralNetwork {
       for(Integer s: l){
         System.out.print("\t"+s);
       }
+    }
     }
   }
 
@@ -140,6 +158,7 @@ public class NeuralNetwork {
         secondLayer.get(position-1).add(ind);
       }
     }
+    if(DEBUG){
     System.out.println();
     for(int i=0; i<secondLayer.size(); i++){
       List<Integer> l = secondLayer.get(i);
@@ -147,6 +166,7 @@ public class NeuralNetwork {
       for(Integer s: l){
         System.out.print("\t"+s);
       }
+    }
     }
   }
 
@@ -159,12 +179,14 @@ public class NeuralNetwork {
       //update index
       firstLayer.get(position-1).add(i);        
     }
+    if(DEBUG){
     for(int i=0; i<firstLayer.size(); i++){
       List<Integer> l = firstLayer.get(i);
       System.out.print("\nFor Quad/neuron " +(i+1) + " indicies are:");
       for(Integer s: l){
         System.out.print("\t"+s);
       }
+    }
     }
   }
 
@@ -211,10 +233,10 @@ public class NeuralNetwork {
     for (int i = 0; i < board[0].length; i++) {
       int total = 7 * i;
       for (int j = 0; j < board[1].length; j++) {
-        System.out.print((i + j + total) + ",");
+        if(DEBUG) System.out.print((i + j + total) + ",");
         input[i + j + total] = (double) board[i][j];
       }
-      System.out.println();
+      //System.out.println();
     }
 
   }
@@ -231,8 +253,10 @@ public class NeuralNetwork {
    * Each parent produces offspring, P'_i using: sigma'_i =
    * sigma_i(j)*exp(tau*normpdf(j, 0,1)) w'_i(j) = w_i(j) +
    * sigma'_i(j)*normpd(j, 0,1) j = 1,..., N_w Where: N_w = number of weights in
+   * X' = X + delta
    * this NN tau = 1/sqrt(2*sqrt(N_w)) - computed in constructor N_j(0,1) is a
    * standard Gaussian random variable resampled for every NN=j
+   * Delta = uniformly at random from {-.1, 0, .1}
    * 
    * Here P_i is just this NN so forget about the indicies
    * 
@@ -243,10 +267,10 @@ public class NeuralNetwork {
     double[] childAdaptiveParamOne = new double[4];
     double[] childAdaptiveParamTwo = new double[4];
     double[] childAdaptiveParamThree = new double[4];
-    for(int i=0, n=selfAdaptiveParam.length; i<n; i++){
-      childAdaptiveParamOne[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
-      childAdaptiveParamTwo[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
-      childAdaptiveParamThree[i] = selfAdaptiveParam[i]*Math.pow(Math.E, term);
+    for(int i=0, n=selfAdaptiveParamOne.length; i<n; i++){
+      childAdaptiveParamOne[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
+      childAdaptiveParamTwo[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
+      childAdaptiveParamThree[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
     }
     double[] firstWeights = new double[4];
     for(int i=0, n=firstCoordWeights.length; i<n; i++){
@@ -264,9 +288,91 @@ public class NeuralNetwork {
       childAdaptiveParamThree[i]*CalcUtil.randomGaussian(0, 1);
     }
     
+    int r = randGen.nextInt(3);
+    int delta = r == 0? 0: r==1? 1 : -1; 
+    double newEvolvable = evolvable + delta;
+    //keep it in range [1,3]
+    newEvolvable = newEvolvable > 3? 3 : newEvolvable < 1 ? 1: newEvolvable;
+    //produce
+    return new NeuralNetwork(firstWeights, childAdaptiveParamOne, 
+        secondWeights, childAdaptiveParamTwo, thirdWeights, 
+        childAdaptiveParamThree, evolvable);
+  }
+  /**
+   * private constructor to produce a neural network with given parameters
+   */
+   private NeuralNetwork(double[] w1, double[] a1, double[] w2, 
+       double[] a2, double[] w3, double[] a3, double evolvable){
+    input = new double[SIZE];
+    // 4 becuase of the 4 coordinate
+    this.firstCoordWeights = w1;
+    this.selfAdaptiveParamOne = a1;
+    firstLayer = new ArrayList<List<Integer>>();
+    this.secondCoordWeights = w2;
+    this.selfAdaptiveParamTwo = a2;
+    secondLayer = new ArrayList<List<Integer>>();
+    this.thirdCoordWeights = w3;
+    this.selfAdaptiveParamThree = a3;
+    thirdLayer = new ArrayList<List<Integer>>();
+    this.evolvable = evolvable;
+    for(int i=0; i<4;i++) firstLayer.add(new ArrayList<Integer>());
     
-    return null;
+    for(int i=0; i<4;i++) secondLayer.add(new ArrayList<Integer>());
+    
+    for(int i=0; i<4;i++) thirdLayer.add(new ArrayList<Integer>());
+    
   }
   
+  public double getEvolvable(){
+    return evolvable;
+  }
+  /**
+   * Higher probability to use X if moves left is low
+   * @param movesLeft
+   * @return
+   */
+  public boolean useEvolvableValue(int movesLeft) {
+    return CalcUtil.randomGaussian(0, Math.pow(1/movesLeft, 2)) < -0.1; 
+  }
+  public String recordDetails() {
+    StringBuffer sb = new StringBuffer();
+    sb.append("weight1 ");
+    for (int i = 0, n = firstCoordWeights.length; i < n; i++) {
+      sb.append(firstCoordWeights[i]).append(" ");
+    }
+    sb.append("\nweight2 ");
+    for (int i = 0, n = secondCoordWeights.length; i < n; i++) {
+      sb.append(secondCoordWeights[i]).append(" ");
+    }
+    sb.append("\nweight3 ");
+    for (int i = 0, n = thirdCoordWeights.length; i < n; i++) {
+      sb.append(thirdCoordWeights[i]).append(" ");
+    }
+    sb.append("\nsigma1 ");
+    for(int i=0, n=selfAdaptiveParamOne.length; i<n;i++){
+      sb.append(selfAdaptiveParamOne[i]).append(" ");
+    }
+    sb.append("\nsigma2 ");
+    for(int i=0, n=selfAdaptiveParamTwo.length; i<n;i++){
+      sb.append(selfAdaptiveParamTwo[i]).append(" ");
+    }
+    sb.append("\nsigma3 ");
+    for(int i=0, n=selfAdaptiveParamThree.length; i<n;i++){
+      sb.append(selfAdaptiveParamThree[i]).append(" ");
+    }
+    System.out.println(sb.toString());
+    return sb.toString();
+  }
+  /**
+   * For logging purposes
+   * @return
+   */
+  public int getName() {
+    return name;
+  }
+  public void setName(int name){
+    this.name = name ;
+  }
+
 
 }

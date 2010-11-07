@@ -2,6 +2,7 @@ package voronoi.gameState;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import voronoi.util.PolarPoly;
@@ -10,7 +11,7 @@ import voronoi.util.Voronize;
 
 
 public class GameState {
-  List<Integer> turns;
+  int[] turns;
   double scores[];
   public static int BOARDSIZE = 400;
   public static int NUMPLAYERS= 2;
@@ -26,27 +27,35 @@ public class GameState {
   double[][] board = new double[8][8];
 
   public GameState(int turn, int players) {
-    turns = new ArrayList<Integer>(2); //one for player, one for opponent
-    turns.add(turn); turns.add(turn);
+    turns = new int[2];
+    turns[0] = turn; turns[1] = turn;
     vo = new Voronize(BOARDSIZE + 2, BOARDSIZE + 2);
     scores = new double[players];
   }
 
   // copy of
   public GameState(GameState state) {
-    this.turns = state.turns;
-    this.scores = state.scores;
-    this.board = state.board; // TODO does this make a copy of the pointer?
+    this.vo = new Voronize(state.vo);
+    this.turns = Arrays.copyOf(state.turns, state.turns.length);
+    this.scores = Arrays.copyOf(state.scores, state.scores.length);
+    //need to deep copy 2D array
+    this.board = new double[8][8];
+    for(int i=0, n = board[0].length; i< n;i++){
+      board[i] = Arrays.copyOf(state.board[i], state.board[i].length);
+    }
   }
 
   public boolean done() {
-    return turns.get(0)==0 && turns.get(1)==0 || numPointsLeft==0;
+    return turns[0]==0 && turns[1]==0 || numPointsLeft==0;
   }
   
   public double result() {
     //first player needs to win by 10%
     if (scores[0] > scores[1]*1.1)
       return 1.0;
+    else if(scores[0] == scores[1]*1.1){
+      return 0.0;
+    }
     else
       return -2.0;
   }
@@ -66,16 +75,25 @@ public class GameState {
       }
     }
     numPointsLeft = poss.size();
+    for(Point2D.Double p : poss){
+      if(p.y==8){
+        System.out.println("SF!");
+      }
+    }
     return poss;
   }
   /****
    * Game state materials below from voronoi2
    */
-  
-  public void addPoint(Point2D.Double pt, int id) {
+  //vall only used if evolvable is selected
+  public void addPoint(Point2D.Double p, int id, double val) {
     //my code add point to board
     //if id == 0, that's player 1 = 1, else set it to -2, otherwise all 0
-    board[(int)pt.x][(int) pt.y] = id==0? 1 : -2;
+    //System.out.println("add: " + (int)p.x + ", " + (int)p.y);
+    board[(int)p.x][(int) p.y] = id==0? 1 : -2;
+    //use X! or -X
+    if(val!= 0.0 && val!=1.0){ board[(int)p.x][(int) p.y] = id==0? val: -1*val; }
+    Point2D.Double pt = new Point2D.Double(p.x, p.y); 
     if (pt.x >= 0 && pt.x < vo.W && pt.y >= 0 && pt.y < vo.H) {
       List<Point2D.Double> points = vo.getPoints();
       pt.x++;
@@ -113,26 +131,39 @@ public class GameState {
     int end = singlePoly ? showPoly + 1 : ppolys.size();
     double area = 0;
     for (int i = start; i < end; i++) {
-      System.out.println("Updating poly " + i);
+      //System.out.println("Updating poly " + i);
 
       Point2D.Double pnt = points.get(i);
 
-      System.out.println("Point " + pnt.x + " " + pnt.y);
+      //System.out.println("Point " + pnt.x + " " + pnt.y);
 
       PolarPoly pp = (PolarPoly) ppolys.get(i);
       area += pp.area();
       java.awt.Polygon poly = pp.getPolygon();
 
       java.awt.Rectangle r = poly.getBounds();
-      System.out.println("x:" + r.x + " y:" + r.y + " w:" + r.width + " h:"
-          + r.height);
+      //System.out.println("x:" + r.x + " y:" + r.y + " w:" + r.width + " h:"
+        //  + r.height);
 
       scores[i % NUMPLAYERS] += pp.area();
     }
+  //  currentScore();
+  }
+  
+  public void currentScore(){
+    System.out.print("Current Score is ");
+    for(int i=0; i< NUMPLAYERS; i++){
+      System.out.print(scores[i]+ " ");
+    }
+    System.out.println();
   }
 
   public void decrementTurn(int id) {
-    Integer turn = turns.get(id);
-    turn--; // TODO this is reference and so works right?
+    turns[id] = turns[id] - 1;
   }
+
+  public int getMovesLeft() {
+    return turns[0];
+  }
+  
 }

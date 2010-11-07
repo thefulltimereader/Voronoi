@@ -38,6 +38,16 @@ public class Voronize {
     LR = new Point2D.Double(W - 1, H - 1);
     clear();
   }
+  public Voronize(Voronize v){
+    W = v.W;
+    H = v.H;
+    UL = v.UL;
+    UR = v.UR;
+    LL = v.LL;
+    LR = v.LR;
+    points = new ArrayList<Point2D.Double>(v.points);
+    ppolys = new ArrayList<PolarPoly>(v.ppolys);
+  }
 
   public static void main(String[] args) {
    // Voronize v = new Voronize(BoardSize + 2, BoardSize + 2);

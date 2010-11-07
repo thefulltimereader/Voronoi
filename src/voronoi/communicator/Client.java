@@ -26,7 +26,7 @@ public class Client {
       System.err.println("Couldn't get I/O for the connection to: localhost.");
       System.exit(1);
     }
-
+    System.out.println("Connection with server success!");
     BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
     String fromServer;
     String fromUser;
@@ -38,7 +38,7 @@ public class Client {
       if(fromServer.equals("YOURTURN")){
         //fromUser = stdIn.readLine();
         fromUser = player.play();
-        System.out.println("final result " + fromUser);
+        System.out.println("final result from player " + fromUser);
         if (fromUser != null) {
           out.println(fromUser);
         }
