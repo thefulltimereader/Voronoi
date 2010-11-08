@@ -265,17 +265,20 @@ public class NeuralNetwork {
    * @return Offspring of this NN
    */
   public NeuralNetwork generateOffspring() {
-    double term1 = tau*CalcUtil.randomGaussian(0, 1);
-    double term2 = tau*CalcUtil.randomGaussian(0, 1);
-    double term3 = tau*CalcUtil.randomGaussian(0, 1);
+    double term1, term2, term3;
     double[] childAdaptiveParamOne = new double[SIZE];
     double[] childAdaptiveParamTwo = new double[4];
     double[] childAdaptiveParamThree = new double[4];
     for(int i=0, n=selfAdaptiveParamOne.length; i<n; i++){
+      term1 = tau*CalcUtil.randomGaussian(0, 1);
       childAdaptiveParamOne[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term1);
     }
     for(int i=0, n=selfAdaptiveParamTwo.length; i<n; i++){
+      term2=tau*CalcUtil.randomGaussian(0, 1);
       childAdaptiveParamTwo[i] = selfAdaptiveParamTwo[i]*Math.pow(Math.E, term2);
+    }
+    for(int i=0, n=selfAdaptiveParamThree.length; i<n; i++){
+      term3=tau*CalcUtil.randomGaussian(0, 1);
       childAdaptiveParamThree[i] = selfAdaptiveParamThree[i]*Math.pow(Math.E, term3);
     }
     double[] firstWeights = new double[SIZE];

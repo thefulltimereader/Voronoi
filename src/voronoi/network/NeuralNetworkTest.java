@@ -33,6 +33,16 @@ public class NeuralNetworkTest {
   }
   @Test
   public void testRecordDetails(){
+    
     nn.recordDetails();
+  }
+  
+  @Test
+  public void testGenerateOffspring(){
+    testBuildInput();
+    NeuralNetwork kid = nn.generateOffspring();
+    kid.recordDetails();
+    NeuralNetwork k2 = kid.generateOffspring();
+    k2.recordDetails();
   }
 }

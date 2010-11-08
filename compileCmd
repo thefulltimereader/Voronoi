@@ -1,0 +1,5 @@
+find ./src -name *.java > sources_list.txt
+javac -d bin -cp lib/junit.jar @sources_list.txt
+
+run:
+goto bin: java voronoi.network.EvolutionsSimulator
