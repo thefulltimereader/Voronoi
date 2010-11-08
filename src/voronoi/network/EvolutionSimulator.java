@@ -41,6 +41,7 @@ public class EvolutionSimulator {
   private final static Logger LOGGER = 
     Logger.getLogger(EvolutionSimulator.class.getName());
   final static int startingIndividuals = 15;
+  private static final int NUMOFGAMES = 1;
   private final Random randGen = new Random();
   int totalNumOfIndividuals = 0;
   int generations = 0;
@@ -51,8 +52,11 @@ public class EvolutionSimulator {
 
   public static void main(String[] args) {
     EvolutionSimulator world = new EvolutionSimulator();
-    
-    world.start();
+    try{
+      world.start();
+    }catch(Exception e){
+      LOGGER.log(Level.SEVERE, "Error", e);
+    }
   }
 
   public EvolutionSimulator() {
@@ -68,10 +72,11 @@ public class EvolutionSimulator {
 
   public void start() {
     produce();
-    while(generations < 5){
+    while(generations < 200){
       mutate();
       playGame();
       survivalOftheFittest();
+      LOGGER.fine("****************generation " + generations + " done****************");
       generations++;
     }
   }
@@ -98,6 +103,15 @@ public class EvolutionSimulator {
       individuals.put(baby, 0);
     }
   }
+  
+  void testPlay(){
+    List<NeuralNetwork> ev = new ArrayList<NeuralNetwork>(individuals.keySet());
+    int count = 0;
+    for(NeuralNetwork play: ev){
+      individuals.put(play, count);
+      count++;
+    }
+  }
 
   void playGame() {
     int numOfGamesPlayed = 0;
@@ -108,7 +122,8 @@ public class EvolutionSimulator {
       if(numOfGamesPlayed%10==0){
         LOGGER.fine("# of Games played so far " + numOfGamesPlayed);
       }
-      for (int i = 0; i < 5; i++) {
+
+      for (int i = 0; i < NUMOFGAMES; i++) {
         int rand = randGen.nextInt(everyone.size());
         if (!everyone.get(rand).equals(player)) {
           NeuralNetwork opponent = everyone.get(rand);
@@ -123,29 +138,31 @@ public class EvolutionSimulator {
     }
     System.out.println("generation " + generations + " done");
     logIndividualScore();
-    LOGGER.fine("********generation " + generations + " done********");
+    
   }
 
-  private void logIndividualScore() {
+  void logIndividualScore() {
     Set<NeuralNetwork> ind = individuals.keySet();
     for(NeuralNetwork nn : ind){
-      LOGGER.info("Nn #"+nn.getName() + "'s score so far:" + individuals.get(nn));
+      LOGGER.info("Nn #"+nn.getName() + "'s score:" + individuals.get(nn));
     }
     
   }
 
-  private void survivalOftheFittest() {
+  void survivalOftheFittest() {
     //sort
     List<NeuralNetwork> sorted = EvolutionSimulator.getKeysSortedByValue(individuals);
     //cut out weaklings
-    sorted.subList(0, 15);
+    List<NeuralNetwork> cutDown = sorted.subList(0, 15);
     Map<NeuralNetwork, Integer> newIndividuals = 
       new HashMap<NeuralNetwork,Integer>();
-    for(NeuralNetwork nn: sorted){
+    for(NeuralNetwork nn: cutDown){
       newIndividuals.put(nn, individuals.get(nn));
     }
-    LOGGER.severe("Best so far is NN #" + sorted.get(0).getName()+
-        " with weights:"+sorted.get(0).recordDetails());
+    LOGGER.severe("Best: NN #" + cutDown.get(0).getName()+
+        " with weights:"+cutDown.get(0).recordDetails());
+    LOGGER.severe("2nd Best: NN #" + cutDown.get(1).getName()+
+        " with weights:"+cutDown.get(1).recordDetails());
     individuals = newIndividuals;
   }
 
@@ -165,9 +182,9 @@ public class EvolutionSimulator {
     list.addAll(map.entrySet());
     final ValueComparator<V> cmp = new ValueComparator<V>();
     Collections.sort(list, cmp);
-    final List<K> keys = new ArrayList<K>(size);
+    List<K> keys = new ArrayList<K>(size); 
     for (int i = 0; i < size; i++) {
-      keys.set(i, list.get(i).getKey());
+      keys.add(i, list.get(i).getKey());
     }
     return keys;
   }
@@ -175,7 +192,8 @@ public class EvolutionSimulator {
   private static final class ValueComparator<V extends Comparable<? super V>>
       implements Comparator<Map.Entry<?, V>> {
     public int compare(Map.Entry<?, V> o1, Map.Entry<?, V> o2) {
-      return o1.getValue().compareTo(o2.getValue());
+      //flipped o1 and o2!!
+      return o2.getValue().compareTo(o1.getValue());
     }
   }
 

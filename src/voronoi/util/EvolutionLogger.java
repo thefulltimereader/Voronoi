@@ -59,7 +59,6 @@ public class EvolutionLogger {
       buf.append(' ');
       buf.append(formatMessage(rec));
       buf.append('\n');
-      buf.append("<td>");
       buf.append("</tr>\n");
       return buf.toString();
     }

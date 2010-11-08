@@ -16,5 +16,20 @@ public class EvolutionSimulatorTest {
   public void testEvolutionSimulator() {
     world.start();
   }
+  @Test
+  public void testSurvivalOfTheFittest(){
+    world.produce();
+    world.mutate();
+    world.testPlay();
+    world.logIndividualScore();
+    world.survivalOftheFittest();
+  }
+  
+  @Test
+  public void testMoreThan5(){
+    world.start();
+    
+  }
+
 
 }

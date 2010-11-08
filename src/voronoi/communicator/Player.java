@@ -1,7 +1,10 @@
 package voronoi.communicator;
 
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Scanner;
 
 import voronoi.gameState.GameState;
 import voronoi.network.NeuralNetwork;
@@ -14,6 +17,8 @@ public class Player {
   private NeuralNetwork strategy;
   private NeuralNetwork strategyOpponent;
   private GameState gameState;
+  
+  private final static String FILENAME = "winner";
   public Player(){
     strategy = retrieveBest();
     strategyOpponent = retrieveBest();
@@ -21,9 +26,60 @@ public class Player {
     strategyOpponent.setId(1);
   }
   
+  public static void main(String[] args){
+    Player p = new Player();
+    
+  }
+  
   private NeuralNetwork retrieveBest(){
-    //TODO: read from file
-    return new NeuralNetwork();
+    File f = new File(FILENAME);
+    double[] w1 = new double[4];
+    double[] a1 = new double[4];
+    double[] w2 = new double[4];
+    double[] a2 = new double[4];
+    double[] w3 = new double[4];
+    double[] a3 = new double[4];
+    double evolvable = 0;       
+    try {
+      Scanner scanner = new Scanner(f);
+      System.out.println("reading input..");
+      while(scanner.hasNext()){
+        String tok = scanner.next();
+        //should.. won't check file input syntax..if(tok.equals("weight1")){
+          for(int i=0; i<4;i++){
+            w1[i] = scanner.nextDouble();
+            System.out.println(w1[i]);
+          }
+          scanner.next();//"weight2"
+          for(int i=0; i<4;i++){
+            w2[i] = scanner.nextDouble();
+            System.out.println(w2[i]);
+          }
+          scanner.next();//"weight3"
+          for(int i=0; i<4;i++){
+            w3[i] = scanner.nextDouble();
+            System.out.println(w3[i]);
+          }
+          scanner.next();//"sigma1"
+          for(int i=0; i<4;i++){
+            a1[i] = scanner.nextDouble();
+          }
+          scanner.next();//"sigma2"
+          for(int i=0; i<4;i++){
+            a2[i] = scanner.nextDouble();
+          }
+          scanner.next();//"sigma3"
+          for(int i=0; i<4;i++){
+            a3[i] = scanner.nextDouble();
+          }
+        //}
+      }
+      
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    
+    return new NeuralNetwork(w1,a1,w2,a2,w3,a3,evolvable);
   }
   public String play() {
     System.out.println("computing...");

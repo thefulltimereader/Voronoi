@@ -263,14 +263,16 @@ public class NeuralNetwork {
    * @return Offspring of this NN
    */
   public NeuralNetwork generateOffspring() {
-    double term = tau*CalcUtil.randomGaussian(0, 1);
+    double term1 = tau*CalcUtil.randomGaussian(0, 1);
+    double term2 = tau*CalcUtil.randomGaussian(0, 1);
+    double term3 = tau*CalcUtil.randomGaussian(0, 1);
     double[] childAdaptiveParamOne = new double[4];
     double[] childAdaptiveParamTwo = new double[4];
     double[] childAdaptiveParamThree = new double[4];
     for(int i=0, n=selfAdaptiveParamOne.length; i<n; i++){
-      childAdaptiveParamOne[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
-      childAdaptiveParamTwo[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
-      childAdaptiveParamThree[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term);
+      childAdaptiveParamOne[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term1);
+      childAdaptiveParamTwo[i] = selfAdaptiveParamTwo[i]*Math.pow(Math.E, term2);
+      childAdaptiveParamThree[i] = selfAdaptiveParamThree[i]*Math.pow(Math.E, term3);
     }
     double[] firstWeights = new double[4];
     for(int i=0, n=firstCoordWeights.length; i<n; i++){
@@ -299,9 +301,9 @@ public class NeuralNetwork {
         childAdaptiveParamThree, evolvable);
   }
   /**
-   * private constructor to produce a neural network with given parameters
+   * Constructor to produce a neural network with given parameters
    */
-   private NeuralNetwork(double[] w1, double[] a1, double[] w2, 
+   public NeuralNetwork(double[] w1, double[] a1, double[] w2, 
        double[] a2, double[] w3, double[] a3, double evolvable){
     input = new double[SIZE];
     // 4 becuase of the 4 coordinate
@@ -332,7 +334,7 @@ public class NeuralNetwork {
    * @return
    */
   public boolean useEvolvableValue(int movesLeft) {
-    return CalcUtil.randomGaussian(0, Math.pow(1/movesLeft, 2)) < -0.1; 
+    return CalcUtil.randomGaussian(0, Math.pow(1/movesLeft, 2)) < -0.05; 
   }
   public String recordDetails() {
     StringBuffer sb = new StringBuffer();
