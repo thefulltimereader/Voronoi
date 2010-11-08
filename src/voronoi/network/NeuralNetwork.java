@@ -46,13 +46,13 @@ public class NeuralNetwork {
   private double evolvable = 2;
     
   private final Random randGen = new Random();
-  private final int numWeights = 64;
+  private final int numWeights = SIZE*4*4;
   private final double tau = 1/Math.sqrt(2*Math.sqrt(numWeights));  
 
   public NeuralNetwork() {
     input = new double[SIZE];
     // 4 becuase of the 4 coordinate
-    firstCoordWeights = new double[4];
+    firstCoordWeights = new double[SIZE];
     selfAdaptiveParamOne = new double[4];
     firstLayer = new ArrayList<List<Integer>>();
     secondCoordWeights = new double[4];
@@ -175,7 +175,7 @@ public class NeuralNetwork {
     for (int i = 0; i < SIZE; i++) {
       int position = getCoordinate(i, WIDTH);
       //apply appropriate weight
-      input[i] = CalcUtil.sigmoid(input[i]*firstCoordWeights[position-1]);
+      input[i] = CalcUtil.sigmoid(input[i]*firstCoordWeights[i]);
       //update index
       firstLayer.get(position-1).add(i);        
     }

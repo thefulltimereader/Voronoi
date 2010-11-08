@@ -45,7 +45,7 @@ public class GameSimulator {
       turns--;
       turnOf= turnOf==0 ? 1: 0;
     }
-    //System.out.println("Result (1=Win, -2=Lose) "+gameState.result());
+    System.out.println("Result (1=Win, -2=Lose) "+gameState.result());
     return (int) gameState.result();
 
     
