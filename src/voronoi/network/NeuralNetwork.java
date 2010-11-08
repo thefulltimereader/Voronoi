@@ -53,7 +53,7 @@ public class NeuralNetwork {
     input = new double[SIZE];
     // 4 becuase of the 4 coordinate
     firstCoordWeights = new double[SIZE];
-    selfAdaptiveParamOne = new double[4];
+    selfAdaptiveParamOne = new double[SIZE];
     firstLayer = new ArrayList<List<Integer>>();
     secondCoordWeights = new double[4];
     selfAdaptiveParamTwo = new double[4];
@@ -89,6 +89,8 @@ public class NeuralNetwork {
     //initially set for 0.05
     for(int i=0, n=selfAdaptiveParamOne.length; i<n;i++){
       selfAdaptiveParamOne[i] = 0.05;
+    }
+    for(int i=0, n=selfAdaptiveParamTwo.length; i<n;i++){
       selfAdaptiveParamTwo[i] = 0.05;
       selfAdaptiveParamThree[i] = 0.05;
     }
@@ -266,15 +268,17 @@ public class NeuralNetwork {
     double term1 = tau*CalcUtil.randomGaussian(0, 1);
     double term2 = tau*CalcUtil.randomGaussian(0, 1);
     double term3 = tau*CalcUtil.randomGaussian(0, 1);
-    double[] childAdaptiveParamOne = new double[4];
+    double[] childAdaptiveParamOne = new double[SIZE];
     double[] childAdaptiveParamTwo = new double[4];
     double[] childAdaptiveParamThree = new double[4];
     for(int i=0, n=selfAdaptiveParamOne.length; i<n; i++){
       childAdaptiveParamOne[i] = selfAdaptiveParamOne[i]*Math.pow(Math.E, term1);
+    }
+    for(int i=0, n=selfAdaptiveParamTwo.length; i<n; i++){
       childAdaptiveParamTwo[i] = selfAdaptiveParamTwo[i]*Math.pow(Math.E, term2);
       childAdaptiveParamThree[i] = selfAdaptiveParamThree[i]*Math.pow(Math.E, term3);
     }
-    double[] firstWeights = new double[4];
+    double[] firstWeights = new double[SIZE];
     for(int i=0, n=firstCoordWeights.length; i<n; i++){
       firstWeights[i] = firstCoordWeights[i] +
       childAdaptiveParamOne[i]*CalcUtil.randomGaussian(0, 1);

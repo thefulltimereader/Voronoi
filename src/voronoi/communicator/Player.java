@@ -46,7 +46,7 @@ public class Player {
       while(scanner.hasNext()){
         String tok = scanner.next();
         //should.. won't check file input syntax..if(tok.equals("weight1")){
-          for(int i=0; i<4;i++){
+          for(int i=0; i<64;i++){
             w1[i] = scanner.nextDouble();
             System.out.println(w1[i]);
           }
