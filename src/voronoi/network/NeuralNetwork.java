@@ -112,7 +112,7 @@ public class NeuralNetwork {
     thirdLayer();//4-2
     double result = 0;
     for (int i = 0; i < SIZE; i++) {
-      result += input[i];
+      result += CalcUtil.sigmoid(input[i]);
     }
     return result;
   }
@@ -134,7 +134,7 @@ public class NeuralNetwork {
       List<Integer> sixteens = secondLayer.get(i);
       for(Integer ind : sixteens){
         int position = getCoordinate(ind%4, 2);
-        input[ind] = CalcUtil.sigmoid(input[ind]*thirdCoordWeights[position-1]);
+        input[ind] = input[ind]*thirdCoordWeights[position-1];
         thirdLayer.get(position-1).add(ind);
       }
     }
@@ -156,7 +156,7 @@ public class NeuralNetwork {
       List<Integer> sixteens = firstLayer.get(i);
       for(Integer ind : sixteens){
         int position = getCoordinate(ind%16, 4);
-        input[ind] = CalcUtil.sigmoid(input[ind]*secondCoordWeights[position-1]);
+        input[ind] = input[ind]*secondCoordWeights[position-1];
         secondLayer.get(position-1).add(ind);
       }
     }
@@ -177,7 +177,7 @@ public class NeuralNetwork {
     for (int i = 0; i < SIZE; i++) {
       int position = getCoordinate(i, WIDTH);
       //apply appropriate weight
-      input[i] = CalcUtil.sigmoid(input[i]*firstCoordWeights[i]);
+      input[i] = input[i]*firstCoordWeights[i];
       //update index
       firstLayer.get(position-1).add(i);        
     }

@@ -13,7 +13,7 @@ import voronoi.util.Pair;
 public class Player {
   int name;
   int turns;
-  final int depth = 5;
+  final int DEPTH = 3;
   private NeuralNetwork strategy;
   private NeuralNetwork strategyOpponent;
   private GameState gameState;
@@ -33,8 +33,8 @@ public class Player {
   
   private NeuralNetwork retrieveBest(){
     File f = new File(FILENAME);
-    double[] w1 = new double[4];
-    double[] a1 = new double[4];
+    double[] w1 = new double[64];
+    double[] a1 = new double[64];
     double[] w2 = new double[4];
     double[] a2 = new double[4];
     double[] w3 = new double[4];
@@ -50,6 +50,7 @@ public class Player {
             w1[i] = scanner.nextDouble();
             System.out.println(w1[i]);
           }
+          System.out.println("w2!");
           scanner.next();//"weight2"
           for(int i=0; i<4;i++){
             w2[i] = scanner.nextDouble();
@@ -61,7 +62,7 @@ public class Player {
             System.out.println(w3[i]);
           }
           scanner.next();//"sigma1"
-          for(int i=0; i<4;i++){
+          for(int i=0; i<64;i++){
             a1[i] = scanner.nextDouble();
           }
           scanner.next();//"sigma2"
@@ -83,7 +84,7 @@ public class Player {
   }
   public String play() {
     System.out.println("computing...");
-    Pair<Point2D.Double, Double> result = alphaBeta(gameState, depth, 
+    Pair<Point2D.Double, Double> result = alphaBeta(gameState, DEPTH, 
         strategy, strategyOpponent, Double.NEGATIVE_INFINITY, 
         Double.POSITIVE_INFINITY, new Point2D.Double(0,0));
     gameState.addPoint(result.getFst(), 0, 1);
@@ -103,7 +104,7 @@ public class Player {
     return new Point2D.Double(pt.x*50, pt.y*50);
   }
   private Point2D.Double scalePtDown(Point2D.Double pt) {
-    return new Point2D.Double(Math.round(Math.round(pt.x/50)), Math.round(Math.round(pt.y/50)));
+    return new Point2D.Double(Math.round(Math.floor(pt.x/50)), Math.round(Math.floor(pt.y/50)));
   }
 
 
@@ -127,8 +128,11 @@ public class Player {
     int y = Integer.valueOf(split[1]); 
     int playerName = Integer.valueOf(split[2]); 
     Point2D.Double pt = new Point2D.Double(x, y);
-    
-    gameState.addPoint(scalePtDown(pt), playerName, -2);
+    try{
+    gameState.addPoint(scalePtDown(pt), 1, -2);
+    }catch(Exception e){
+      e.printStackTrace();
+    }
     
   }
   
@@ -136,7 +140,7 @@ public class Player {
   private Pair<Point2D.Double, Double> alphaBeta(GameState state, int depth, 
       NeuralNetwork player, NeuralNetwork opponent, double alpha, 
       double beta, Point2D.Double choice){
-   // if(depth%5 == 0) System.out.print("...");
+    //    if(depth%DEPTH == 0) System.out.print("...");
     if (depth == 0 || state.done()){
       if(state.done()) return new Pair<Point2D.Double, Double>(choice, state.result());
       return new Pair<Point2D.Double, Double>(choice, player.evaluateState(state.getBoard()));

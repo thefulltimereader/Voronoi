@@ -129,9 +129,12 @@ public class EvolutionSimulator {
           NeuralNetwork opponent = everyone.get(rand);
           GameSimulator simulator = new GameSimulator(player, opponent);
           int result = simulator.simulate();
-          int score = individuals.get(player);
+          int resultForOpponent = result==1? -2: result==-2? 1: 0;
+          int cumscore = individuals.get(player);
+          int cumOpponentScore = individuals.get(opponent);
           // update
-          individuals.put(player, score + result);
+          individuals.put(player, cumscore + result);
+          individuals.put(opponent, cumOpponentScore + resultForOpponent);
           numOfGamesPlayed++;
         }
       }

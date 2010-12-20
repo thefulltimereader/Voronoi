@@ -90,7 +90,9 @@ public class GameState {
     //my code add point to board
     //if id == 0, that's player 1 = 1, else set it to -2, otherwise all 0
     //System.out.println("add: " + (int)p.x + ", " + (int)p.y);
-    board[(int)p.x][(int) p.y] = id==0? 1 : -2;
+    
+      board[(int)p.x][(int)p.y] = id==0? 1 : -2;
+
     //use X! or -X
     if(val!= 0.0 && val!=1.0){ board[(int)p.x][(int) p.y] = id==0? val: -1*val; }
     Point2D.Double pt = new Point2D.Double(p.x, p.y); 

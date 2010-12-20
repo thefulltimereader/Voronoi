@@ -7,6 +7,5 @@ public class PlayerTest {
   @Test
   public void testRetrieveBest(){
     Player p = new Player();
-    
   }
 }
